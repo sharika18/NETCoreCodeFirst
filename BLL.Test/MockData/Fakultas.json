@@ -1,0 +1,20 @@
+[
+  {
+    "fakultasId": "4fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "namaFakultas": "Fakultas Ilmu Komputer",
+    "programStudis": [
+      {
+        "programStudiId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "namaProgramStudi": "Teknologi Informasi"
+      },
+      {
+        "programStudiId": "2fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "namaProgramStudi": "Sistem Informasi"
+      }
+    ]
+  },
+  {
+    "fakultasId": "7fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "namaFakultas": "Fakultas Kedokteran"
+  }
+]
