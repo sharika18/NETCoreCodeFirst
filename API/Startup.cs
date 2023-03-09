@@ -51,6 +51,7 @@ namespace API
             //services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<FakultasService>();
             services.AddGraphQLServer().AddQueryType<FakultasService>();
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddSingleton<IKafkaSender, KafkaSender>();
             services.AddSingleton<IHostedService, ConsumerService>();
@@ -79,8 +80,8 @@ namespace API
 
             app.UseEndpoints(endpoints =>
             {
-                //endpoints.MapControllers();
-                endpoints.MapGraphQL();
+                endpoints.MapControllers();
+                //endpoints.MapGraphQL();
             });
 
             app.UseSwagger();

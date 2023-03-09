@@ -39,6 +39,7 @@ namespace API.Controllers
         [ProducesResponseType(typeof(string), 400)]
         public async Task<ActionResult> GetAllAsync()
         {
+            //List<string> resultt = _fakultasService.getUsernames(10);
             List<Model.Fakultas> result = await _fakultasService.GetAllFakultasAsync();
             List<FakultasWithProgramStudiDTO> mappedResult = _mapper.Map<List<FakultasWithProgramStudiDTO>>(result);
             return new OkObjectResult(mappedResult);

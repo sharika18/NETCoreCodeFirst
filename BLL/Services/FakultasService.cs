@@ -6,7 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace BLL.Services
@@ -87,6 +89,35 @@ namespace BLL.Services
         {
             string topic = _config.GetValue<string>("Topic:Fakultas");
             await _kafkaSender.SendAsync(topic, data);
+        }
+
+        public static string GetApi(string ApiUrl)
+        {
+
+            var responseString = "";
+            var request = (HttpWebRequest)WebRequest.Create(ApiUrl);
+            request.Method = "GET";
+            request.ContentType = "application/json";
+
+            using (var response1 = request.GetResponse())
+            {
+                using (var reader = new StreamReader(response1.GetResponseStream()))
+                {
+                    responseString = reader.ReadToEnd();
+                }
+            }
+            return responseString;
+
+        }
+        public List<string> getUsernames(int threshold)
+        {
+            List<string> result = new List<string>();
+
+            var count = 1;
+            var total = 0;
+            var responseString = GetApi("http://localhost:58087/api/State/StateList");
+            return result;
+
         }
     }
 }
