@@ -1,28 +1,54 @@
 ﻿using AutoMapper;
-using API.Falultas.DTO;
-using API.ProgramStudi.DTO;
-using Model = DAL.Model;
+using API.DTO;
+using Model = DAL.Models;
 namespace API
 {
     public class AutoMapperProfileConfiguration : Profile
     {
         public AutoMapperProfileConfiguration()
         {
-            CreateMap<FakultasDTO, Model.Fakultas>();
-            CreateMap<Model.Fakultas, FakultasDTO>();
+            //CATEGORY
+            CreateMap<CategoryDTO, Model.Category>();
+            CreateMap<Model.Category, CategoryDTO>();
 
-            CreateMap<FakultasWithProgramStudiDTO, Model.Fakultas>();
-            CreateMap<Model.Fakultas, FakultasWithProgramStudiDTO>();
+            //CUSTOMER
+            CreateMap<CustomerDTO, Model.Customer>();
+            CreateMap<Model.Customer, CustomerDTO>();
+
+            //PRODUCT
+            CreateMap<ProductDTO, Model.Product>();
+            CreateMap<Model.Product, ProductDTO>();
+
+            CreateMap<ProductWithSubCategoryDTO, Model.Product>()
+                .ForMember(s => s.SubCategoryId, d => d.MapFrom(t => t.SubCategory.SubCategoryId))
+                .ForMember(s => s.SubCategory, opt => opt.Ignore()); ;
+            CreateMap<Model.Product, ProductWithSubCategoryDTO>();
 
 
-            CreateMap<ProgramStudiWithFakultasDTO, Model.ProgramStudi>()
-                .ForMember(s => s.FakultasId, d => d.MapFrom(t => t.Fakultas.FakultasId))
-                .ForMember(s => s.Fakultas, opt => opt.Ignore());
-            CreateMap<Model.ProgramStudi, ProgramStudiWithFakultasDTO>();
+            //SALES
+            CreateMap<SalesDTO, Model.Sales>();
+            CreateMap<Model.Sales, SalesDTO>();
 
+            CreateMap<SalesCreateDTO, Model.Sales>();
+            CreateMap<Model.Sales, SalesCreateDTO>();
 
-            CreateMap<ProgramStudiDTO, Model.ProgramStudi>();
-            CreateMap<Model.ProgramStudi, ProgramStudiDTO>();
+            CreateMap<SalesWithDependencyDTO, Model.Sales>();
+            CreateMap<Model.Sales, SalesWithDependencyDTO>();
+
+            //SUBCATEGORY
+            CreateMap<SubCategoryDTO, Model.SubCategory>();
+            CreateMap<Model.SubCategory, SubCategoryDTO>();
+
+            
+
+            CreateMap<SubCategoryWithCategoryDTO, Model.SubCategory>()
+                .ForMember(s => s.CategoryId, d => d.MapFrom(t => t.CategoryDTO.CategoryId))
+                .ForMember(s => s.Category, opt => opt.Ignore()); ; ;
+            CreateMap<Model.SubCategory, SubCategoryWithCategoryDTO>();
+
+            //TERRITORIES
+            CreateMap<TerritoriesDTO, Model.Territories>();
+            CreateMap<Model.Territories, TerritoriesDTO>();
         }
     }
 }

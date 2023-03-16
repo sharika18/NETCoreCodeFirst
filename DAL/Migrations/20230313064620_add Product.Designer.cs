@@ -4,14 +4,16 @@ using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20230313064620_add Product")]
+    partial class addProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,7 +23,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Models.Category", b =>
                 {
-                    b.Property<Guid>("CategoryId")
+                    b.Property<Guid>("CategoryKey")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -29,48 +31,9 @@ namespace DAL.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("CategoryId");
+                    b.HasKey("CategoryKey");
 
                     b.ToTable("Category");
-                });
-
-            modelBuilder.Entity("DAL.Models.Customer", b =>
-                {
-                    b.Property<Guid>("CustomerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AddressLine")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("CustomerIsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("DateFirstPurchase")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Gender")
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
-
-                    b.Property<string>("LastName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("MaritalStatus")
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
-
-                    b.HasKey("CustomerId");
-
-                    b.ToTable("Customer");
                 });
 
             modelBuilder.Entity("DAL.Models.Fakultas", b =>
@@ -100,7 +63,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Models.Product", b =>
                 {
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid>("ProductKey")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -122,12 +85,15 @@ namespace DAL.Migrations
                     b.Property<decimal>("StandardCost")
                         .HasColumnType("decimal(13,4)");
 
-                    b.Property<Guid>("SubCategoryId")
+                    b.Property<Guid>("SubCategoryKey")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("ProductId");
+                    b.Property<Guid?>("SubCategoryKey1")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("SubCategoryId");
+                    b.HasKey("ProductKey");
+
+                    b.HasIndex("SubCategoryKey1");
 
                     b.ToTable("Product");
                 });
@@ -158,89 +124,34 @@ namespace DAL.Migrations
                     b.ToTable("ProgramStudi");
                 });
 
-            modelBuilder.Entity("DAL.Models.Sales", b =>
-                {
-                    b.Property<Guid>("SalesId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("OrderQuantity")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("SalesAmount")
-                        .HasColumnType("decimal(13,4)");
-
-                    b.Property<string>("SalesStatus")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("TerritoriesId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(13,4)");
-
-                    b.HasKey("SalesId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("TerritoriesId");
-
-                    b.ToTable("Sales");
-                });
-
             modelBuilder.Entity("DAL.Models.SubCategory", b =>
                 {
-                    b.Property<Guid>("SubCategoryId")
+                    b.Property<Guid>("SubCategoryKey")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CategoryId")
+                    b.Property<Guid?>("CategoryKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Categorykey")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SubCategoryName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("SubCategoryId");
+                    b.HasKey("SubCategoryKey");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryKey");
 
                     b.ToTable("SubCategory");
-                });
-
-            modelBuilder.Entity("DAL.Models.Territories", b =>
-                {
-                    b.Property<Guid>("TerritoriesId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Country")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("TerritoriesId");
-
-                    b.ToTable("Territories");
                 });
 
             modelBuilder.Entity("DAL.Models.Product", b =>
                 {
                     b.HasOne("DAL.Models.SubCategory", "SubCategory")
                         .WithMany()
-                        .HasForeignKey("SubCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SubCategoryKey1");
 
                     b.Navigation("SubCategory");
                 });
@@ -256,40 +167,11 @@ namespace DAL.Migrations
                     b.Navigation("Fakultas");
                 });
 
-            modelBuilder.Entity("DAL.Models.Sales", b =>
-                {
-                    b.HasOne("DAL.Models.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.Models.Territories", "Territories")
-                        .WithMany()
-                        .HasForeignKey("TerritoriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Territories");
-                });
-
             modelBuilder.Entity("DAL.Models.SubCategory", b =>
                 {
                     b.HasOne("DAL.Models.Category", "Category")
                         .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CategoryKey");
 
                     b.Navigation("Category");
                 });

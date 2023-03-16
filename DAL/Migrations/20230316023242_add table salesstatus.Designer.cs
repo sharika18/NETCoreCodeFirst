@@ -4,14 +4,16 @@ using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20230316023242_add table salesstatus")]
+    partial class addtablesalesstatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,9 +47,6 @@ namespace DAL.Migrations
 
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("CustomerIsActive")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("DateFirstPurchase")
                         .HasColumnType("datetime2");
@@ -179,9 +178,6 @@ namespace DAL.Migrations
                     b.Property<decimal>("SalesAmount")
                         .HasColumnType("decimal(13,4)");
 
-                    b.Property<string>("SalesStatus")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("TerritoriesId")
                         .HasColumnType("uniqueidentifier");
 
@@ -197,6 +193,21 @@ namespace DAL.Migrations
                     b.HasIndex("TerritoriesId");
 
                     b.ToTable("Sales");
+                });
+
+            modelBuilder.Entity("DAL.Models.SalesStatus", b =>
+                {
+                    b.Property<Guid>("SalesStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SalesStatusName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("SalesStatusId");
+
+                    b.ToTable("SalesStatus");
                 });
 
             modelBuilder.Entity("DAL.Models.SubCategory", b =>

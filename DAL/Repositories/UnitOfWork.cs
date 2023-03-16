@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using DAL.Model;
+using DAL.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,15 +11,16 @@ namespace DAL.Repositories
     {
         private readonly Context dbContext;
 
-        public IFakultasRepository FakultasRepository { get; }
-        public IProgramStudiRepository ProgramStudiRepository { get; }
-
+        public ISalesRepository SalesRepository { get; }
+        public IProductRepository ProductRepository { get; }
+        public ICustomerRepository CustomerRepository { get; }
         public UnitOfWork(Context context)
         {
             dbContext = context;
 
-            FakultasRepository = new FakultasRepository(context);
-            ProgramStudiRepository = new ProgramStudiRepository(context);
+            SalesRepository = new SalesRepository(context);
+            ProductRepository = new ProductRepository(context);
+            CustomerRepository = new CustomerRepository(context);
         }
 
         public void Save()

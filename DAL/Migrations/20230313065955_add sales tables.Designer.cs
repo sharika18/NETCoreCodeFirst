@@ -4,20 +4,41 @@ using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20230313065955_add sales tables")]
+    partial class addsalestables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.17")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("DAL.Models.Budget", b =>
+                {
+                    b.Property<Guid>("BudgetId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("BudgetAmount")
+                        .HasColumnType("decimal(13,4)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("BudgetId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("Budget");
+                });
 
             modelBuilder.Entity("DAL.Models.Category", b =>
                 {
@@ -46,10 +67,7 @@ namespace DAL.Migrations
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("CustomerIsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("DateFirstPurchase")
+                    b.Property<DateTime>("DateFirstPurchase")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("FirstName")
@@ -179,9 +197,6 @@ namespace DAL.Migrations
                     b.Property<decimal>("SalesAmount")
                         .HasColumnType("decimal(13,4)");
 
-                    b.Property<string>("SalesStatus")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("TerritoriesId")
                         .HasColumnType("uniqueidentifier");
 
@@ -232,6 +247,17 @@ namespace DAL.Migrations
                     b.HasKey("TerritoriesId");
 
                     b.ToTable("Territories");
+                });
+
+            modelBuilder.Entity("DAL.Models.Budget", b =>
+                {
+                    b.HasOne("DAL.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("DAL.Models.Product", b =>

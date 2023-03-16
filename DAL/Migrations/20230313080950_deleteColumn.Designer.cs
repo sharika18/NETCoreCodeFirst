@@ -4,20 +4,41 @@ using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20230313080950_deleteColumn")]
+    partial class deleteColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.17")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("DAL.Models.Budget", b =>
+                {
+                    b.Property<Guid>("BudgetId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("BudgetAmount")
+                        .HasColumnType("decimal(13,4)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("BudgetId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("Budget");
+                });
 
             modelBuilder.Entity("DAL.Models.Category", b =>
                 {
@@ -46,12 +67,6 @@ namespace DAL.Migrations
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("CustomerIsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("DateFirstPurchase")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("FirstName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -68,7 +83,12 @@ namespace DAL.Migrations
                         .HasMaxLength(1)
                         .HasColumnType("nvarchar(1)");
 
+                    b.Property<Guid?>("SalesId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("CustomerId");
+
+                    b.HasIndex("SalesId");
 
                     b.ToTable("Customer");
                 });
@@ -119,6 +139,9 @@ namespace DAL.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid?>("SalesId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("StandardCost")
                         .HasColumnType("decimal(13,4)");
 
@@ -126,6 +149,8 @@ namespace DAL.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ProductId");
+
+                    b.HasIndex("SalesId");
 
                     b.HasIndex("SubCategoryId");
 
@@ -179,9 +204,6 @@ namespace DAL.Migrations
                     b.Property<decimal>("SalesAmount")
                         .HasColumnType("decimal(13,4)");
 
-                    b.Property<string>("SalesStatus")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("TerritoriesId")
                         .HasColumnType("uniqueidentifier");
 
@@ -229,13 +251,40 @@ namespace DAL.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid?>("SalesId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("TerritoriesId");
+
+                    b.HasIndex("SalesId");
 
                     b.ToTable("Territories");
                 });
 
+            modelBuilder.Entity("DAL.Models.Budget", b =>
+                {
+                    b.HasOne("DAL.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("DAL.Models.Customer", b =>
+                {
+                    b.HasOne("DAL.Models.Sales", null)
+                        .WithMany("listCustomer")
+                        .HasForeignKey("SalesId");
+                });
+
             modelBuilder.Entity("DAL.Models.Product", b =>
                 {
+                    b.HasOne("DAL.Models.Sales", null)
+                        .WithMany("listProduct")
+                        .HasForeignKey("SalesId");
+
                     b.HasOne("DAL.Models.SubCategory", "SubCategory")
                         .WithMany()
                         .HasForeignKey("SubCategoryId")
@@ -294,9 +343,25 @@ namespace DAL.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("DAL.Models.Territories", b =>
+                {
+                    b.HasOne("DAL.Models.Sales", null)
+                        .WithMany("listTerritories")
+                        .HasForeignKey("SalesId");
+                });
+
             modelBuilder.Entity("DAL.Models.Fakultas", b =>
                 {
                     b.Navigation("ProgramStudis");
+                });
+
+            modelBuilder.Entity("DAL.Models.Sales", b =>
+                {
+                    b.Navigation("listCustomer");
+
+                    b.Navigation("listProduct");
+
+                    b.Navigation("listTerritories");
                 });
 #pragma warning restore 612, 618
         }

@@ -7,8 +7,9 @@ namespace DAL.Repositories
 {
     public interface IUnitOfWork : IDisposable
     {
-        public IFakultasRepository FakultasRepository { get; }
-        public IProgramStudiRepository ProgramStudiRepository { get; }
+        public ISalesRepository SalesRepository { get; }
+        public IProductRepository ProductRepository { get; }
+        public ICustomerRepository CustomerRepository { get; }
 
         void Save();
         Task SaveAsync(CancellationToken cancellationToken = default(CancellationToken));

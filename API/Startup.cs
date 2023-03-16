@@ -1,5 +1,5 @@
 using BLL.Kafka;
-using DAL.Model;
+using DAL.Models;
 using DAL.Repositories;
 using External;
 using Microsoft.AspNetCore.Builder;
@@ -20,8 +20,10 @@ using HotChocolate;
 using System.Threading.Tasks;
 using HotChocolate.AspNetCore;
 using HotChocolate.AspNetCore.Playground;
-using API.GraphQL;
 using BLL.Services;
+using BLL.Background;
+using BLL.Cache;
+using BLL.Interfaces;
 
 namespace API
 {
@@ -48,13 +50,23 @@ namespace API
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 
-            //services.AddScoped<IRedisService, RedisService>();
-            services.AddScoped<FakultasService>();
-            services.AddGraphQLServer().AddQueryType<FakultasService>();
+            
 
+            services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ISalesService, SalesService>();
+
+
             services.AddSingleton<IKafkaSender, KafkaSender>();
+            services.AddSingleton<IKafkaConsumer, KafkaConsumer>();
+
             services.AddSingleton<IHostedService, ConsumerService>();
+            services.AddSingleton<IHostedService, SalesReceiveKafka>();
+            //services.AddSingleton<IHostedService, ReceiveTopicOrderCreated>();
+            services.AddHostedService<ReceiveTopicOrderCreated>();
+            services.AddHostedService<ReceiveTopicVerifyCustomer>();
 
 
             services.AddApplicationInsightsTelemetry();
