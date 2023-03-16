@@ -1,5 +1,8 @@
-﻿using BLL.Interfaces;
+﻿using BLL.Cache;
+using BLL.DTO;
+using BLL.Interfaces;
 using BLL.Kafka;
+using DAL.Interfaces;
 using DAL.Models;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -17,16 +20,24 @@ namespace BLL.Services
     {
         private IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
+        private readonly IRedisService _redis; 
         private readonly IKafkaSender _kafkaSender;
-        //private IRedisService _redis;
         private readonly ILogger<CustomerService> _logger;
+        private string topic = "";
 
-        public CustomerService(IUnitOfWork unitOfWork, IConfiguration config, IKafkaSender kafkaSender, ILogger<CustomerService> logger)
+        public CustomerService(
+            IUnitOfWork unitOfWork,
+             IConfiguration config,
+            IRedisService redis, 
+            IKafkaSender kafkaSender,
+            ILogger<CustomerService> logger)
         {
             _unitOfWork = unitOfWork;
             _config = config;
+            _redis = redis;
             _kafkaSender = kafkaSender;
             _logger = logger;
+            topic = _config.GetValue<string>("Topic:VerifyConsumer");
         }
 
         public async Task<List<Customer>> GetAllCustomerAsync()
@@ -37,25 +48,26 @@ namespace BLL.Services
 
         public async Task<Customer> GetCustomerByIdAsync(Guid CustomerId)
         {
-            _logger.LogInformation("Getting All Data Customer");
-            var result = await _unitOfWork.CustomerRepository.GetAll()
-                .Where(x => x.CustomerId == CustomerId)
-                .FirstOrDefaultAsync();
-            return result;
+            _logger.LogInformation("Getting Customer By Id");
+            Customer Customer = await _redis.GetAsync<Customer>($"{PrefixRedisKey.CustomerKey}:{CustomerId}");
+
+            if (Customer == null)
+            {
+                Customer = await _unitOfWork.CustomerRepository.GetAll()
+                    .Where(x => x.CustomerId == CustomerId)
+                    .FirstOrDefaultAsync();
+
+                TimeSpan expirition = new TimeSpan(1, 0, 00);
+                await _redis.SaveAsync($"{PrefixRedisKey.CustomerKey}:{CustomerId}", Customer, expirition);
+            }
+
+            return Customer;
         }
 
         public async Task CreateCustomerAsync(Customer data)
         {
-            try
-            {
-                await _unitOfWork.CustomerRepository.AddAsync(data);
-                await _unitOfWork.SaveAsync();
-            }
-
-            catch(Exception e)
-            {
-
-            }
+            await _unitOfWork.CustomerRepository.AddAsync(data);
+            await _unitOfWork.SaveAsync();
         }
 
         public async Task UpdateCustomerAsync(Customer data)
@@ -83,12 +95,27 @@ namespace BLL.Services
             await _unitOfWork.SaveAsync();
         }
 
+        public async Task VerifyingCustomer(Sales data)
+        {
+            Customer customerData = await GetCustomerByIdAsync(data.CustomerId);
+
+            string statusCustomer = CustomerStatus.NotFound;
+
+            if (customerData != null)
+            {
+                statusCustomer = customerData.CustomerIsActive ? CustomerStatus.Active : CustomerStatus.InActive;
+            }
+
+            var verifyingCustomerDTO = new VerifyingCustomerDTO()
+            {
+                SalesId = data.SalesId,
+                CustomerId = data.CustomerId,
+                CustomerStatus = statusCustomer
+            };
+
+            await _kafkaSender.SendAsync(topic, verifyingCustomerDTO);
+        }
     }
 
-    public static class CustomerStatus
-    {
-        public const string Active = "Active";
-        public const string InActive = "InActive";
-        public const string NotFound = "NotFound";
-    }
+    
 }

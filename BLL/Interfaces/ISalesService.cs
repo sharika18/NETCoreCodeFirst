@@ -1,4 +1,5 @@
-﻿using DAL.Models;
+﻿using BLL.DTO;
+using DAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,8 @@ namespace BLL.Interfaces
         Task<List<Sales>> GetAllSalesAsync();
         Task CreateSalesAsync(Sales data);
         Task<Sales> GetSalesByIdAsync(Guid id);
-        Task UpdateSalesAsync(Sales data);
+        Task<Sales> UpdateSalesAsync(Sales data);
         Task DeleteSalesAsync(Guid SalesId);
+        Task ApproveRejectSales(VerifyingCustomerDTO verifyingCustomerdata);
     }
 }

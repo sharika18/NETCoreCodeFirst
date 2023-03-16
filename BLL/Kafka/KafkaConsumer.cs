@@ -9,7 +9,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using BLL.Services;
 using BLL.Kafka;
-
+//using Microsoft.Extensions.DependencyInjection;
+using BLL.Interfaces;
+using DAL.Models;
 
 namespace BLL.Kafka
 {
@@ -19,9 +21,9 @@ namespace BLL.Kafka
         private readonly IConfiguration _config;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ILogger _logger;
-        private readonly FakultasConsumerService _fakultasConsumer;
+        public IServiceProvider Services { get; }
 
-        public KafkaConsumer(IConfiguration config, ILogger<KafkaConsumer> logger)
+        public KafkaConsumer(IConfiguration config, ILogger<KafkaConsumer> logger, IServiceProvider services)
         {
             _logger = logger;
             _config = config;
@@ -34,13 +36,14 @@ namespace BLL.Kafka
                 AllowAutoCreateTopics = true,
                 IsolationLevel = IsolationLevel.ReadCommitted
             };
-            _fakultasConsumer = new FakultasConsumerService(_logger);
+            Services = services;
         }
 
        
 
         public Task RegisterTopic(string topic, IConsumeProcess process, CancellationToken stoppingToken, CancellationTokenSource cancellationTokenSource)
         {
+            _cancellationTokenSource = cancellationTokenSource;
             return Task.Run(async () =>
             {
                 do
@@ -87,6 +90,7 @@ namespace BLL.Kafka
                         try
                         {
                             _logger.LogInformation($"Topic {topic} Consumed Result : {JsonConvert.SerializeObject(result)}");
+
                             await consumeAsync(result, cancellationToken);
                             consumer.Commit(result);
                         }

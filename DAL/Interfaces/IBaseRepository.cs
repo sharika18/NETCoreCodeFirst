@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DAL.Repositories
+namespace DAL.Interfaces
 {
     public interface IBaseRepository<T> where T : class
     {
@@ -14,6 +14,7 @@ namespace DAL.Repositories
         void AddRange(IEnumerable<T> entities);
         Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default(CancellationToken));
         void Edit(T entity);
+        //Task<T> Edit(T entity);
         void Delete(T entity);
         void DeleteRange(params T[] entities);
         void Delete(Expression<Func<T, bool>> where);

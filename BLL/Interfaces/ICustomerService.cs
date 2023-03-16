@@ -13,5 +13,6 @@ namespace BLL.Interfaces
         Task<Customer> GetCustomerByIdAsync(Guid id);
         Task UpdateCustomerAsync(Customer data);
         Task DeleteCustomerAsync(Guid CustomerId);
+        Task VerifyingCustomer(Sales data);
     }
 }

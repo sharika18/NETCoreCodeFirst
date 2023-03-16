@@ -1,16 +1,18 @@
 ﻿using Confluent.Kafka;
-using BLL.Kafka;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BLL.Services
+namespace BLL.Kafka
 {
-    public class FakultasConsumerService : IConsumeProcess
+    public class ConsumeProcess : IConsumeProcess
     {
         private readonly ILogger _logger;
 
-        public FakultasConsumerService(ILogger logger)
+        public ConsumeProcess(ILogger logger)
         {
             _logger = logger;
         }

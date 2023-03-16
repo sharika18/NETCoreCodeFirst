@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DAL.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,7 @@ namespace DAL.Repositories
             dbSet.Attach(entity);
             Context.Entry(entity).State = EntityState.Modified;
         }
+
 
         public void Delete(T entity)
         {

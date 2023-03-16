@@ -2,6 +2,7 @@
 using BLL.DTO;
 using BLL.Interfaces;
 using BLL.Kafka;
+using DAL.Interfaces;
 using DAL.Models;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +21,10 @@ namespace BLL.Services
         private IUnitOfWork _unitOfWork;
         private readonly IRedisService _redis;
         private readonly ILogger<ProductService> _logger;
-        private string prefixRedisKeyProduct = "Product_ProductId";
-        public ProductService(IUnitOfWork unitOfWork, ILogger<ProductService> logger, IRedisService redis)
+        public ProductService(
+            IUnitOfWork unitOfWork, 
+            ILogger<ProductService> logger, 
+            IRedisService redis)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

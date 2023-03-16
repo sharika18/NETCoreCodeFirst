@@ -24,6 +24,7 @@ using BLL.Services;
 using BLL.Background;
 using BLL.Cache;
 using BLL.Interfaces;
+using DAL.Interfaces;
 
 namespace API
 {

@@ -22,10 +22,12 @@ namespace API.Controllers
         private ISalesService _salesService;
         private IMapper _mapper;
         private readonly ILogger<SalesController> _logger;
-        public SalesController(
-            ILogger<SalesController> logger, 
-            IMapper mapper, 
-            ISalesService salesService)
+        public SalesController
+            (
+                ILogger<SalesController> logger, 
+                IMapper mapper, 
+                ISalesService salesService
+            )
         {
             _mapper = mapper;
             _logger = logger;
@@ -87,7 +89,7 @@ namespace API.Controllers
                 await _salesService.CreateSalesAsync(data);
                 return new OkResult();
             }
-            catch(Exception e)
+            catch
             {
                 return new BadRequestResult();
             }

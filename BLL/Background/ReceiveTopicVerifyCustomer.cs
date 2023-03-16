@@ -2,7 +2,7 @@
 using BLL.DTO;
 using BLL.Interfaces;
 using BLL.Kafka;
-using BLL.Services;
+using BLL.Services.Consumer;
 using Confluent.Kafka;
 using DAL.Models;
 using Microsoft.Extensions.Configuration;
@@ -24,12 +24,16 @@ namespace BLL.Background
         private readonly IConfiguration _config;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ILogger _logger;
-        private readonly FakultasConsumerService _fakultasConsumer;
+        private readonly SalesConsumerService _Consumer;
+
+        private readonly IKafkaConsumer _kafkaConsumer;
         public IServiceProvider Services { get; }
-        public ReceiveTopicVerifyCustomer(
-            IConfiguration config, 
-            ILogger<KafkaConsumer> logger,
-            IServiceProvider services
+        public ReceiveTopicVerifyCustomer
+            (
+                IConfiguration config, 
+                ILogger<KafkaConsumer> logger,
+                IServiceProvider services,
+                IKafkaConsumer kafkaConsumer
             )
         {
             _logger = logger;
@@ -43,10 +47,10 @@ namespace BLL.Background
                 AllowAutoCreateTopics = true,
                 IsolationLevel = IsolationLevel.ReadCommitted
             };
-            _fakultasConsumer = new FakultasConsumerService(_logger);
             Services = services;
-            //_salesService = salesService;
-            //_redisService = redisService;
+            _kafkaConsumer = kafkaConsumer;
+
+            _Consumer = new SalesConsumerService(_logger, Services);
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -55,114 +59,100 @@ namespace BLL.Background
 
             List<Task> tasks = new List<Task>
             {
-                RegisterTopic(validationPartTwoComplete,_fakultasConsumer,stoppingToken),
+              _kafkaConsumer.RegisterTopic(validationPartTwoComplete,_Consumer,stoppingToken, _cancellationTokenSource),
             };
 
             await Task.WhenAll(tasks.ToArray());
         }
 
-        private Task RegisterTopic(string topic, IConsumeProcess process, CancellationToken stoppingToken)
-        {
-            return Task.Run(async () =>
-            {
-                do
-                {
-                    try
-                    {
-                        await ConsumeAsync<string>(topic, process.ConsumeAsync, false, _cancellationTokenSource.Token);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogCritical(e, $"Error when consuming topic \"{topic}\".");
-                    }
-                } while (!_cancellationTokenSource.IsCancellationRequested);
-            }, stoppingToken);
-        }
+        //private Task RegisterTopic(string topic, IConsumeProcess process, CancellationToken stoppingToken)
+        //{
+        //    return Task.Run(async () =>
+        //    {
+        //        do
+        //        {
+        //            try
+        //            {
+        //                await ConsumeAsync<string>(topic, process.ConsumeAsync, false, _cancellationTokenSource.Token);
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                _logger.LogCritical(e, $"Error when consuming topic \"{topic}\".");
+        //            }
+        //        } while (!_cancellationTokenSource.IsCancellationRequested);
+        //    }, stoppingToken);
+        //}
 
 
-        private async Task ConsumeAsync<TKey>(string topic, Func<ConsumeResult<TKey, string>, CancellationToken, Task> consumeAsync, bool commitOnError, CancellationToken cancellationToken)
-        {
-            using (var consumer = new ConsumerBuilder<TKey, string>(_consumerConfig).Build())
-            {
-                consumer.Subscribe(topic);
+        //private async Task ConsumeAsync<TKey>(string topic, Func<ConsumeResult<TKey, string>, CancellationToken, Task> consumeAsync, bool commitOnError, CancellationToken cancellationToken)
+        //{
+        //    using (var consumer = new ConsumerBuilder<TKey, string>(_consumerConfig).Build())
+        //    {
+        //        consumer.Subscribe(topic);
 
-                try
-                {
-                    while (!cancellationToken.IsCancellationRequested)
-                    {
-                        ConsumeResult<TKey, string> result = null;
+        //        try
+        //        {
+        //            while (!cancellationToken.IsCancellationRequested)
+        //            {
+        //                ConsumeResult<TKey, string> result = null;
 
-                        try
-                        {
-                            result = consumer.Consume(cancellationToken);
-                            using (var scope = Services.CreateScope())
-                            {
-                                var scopedISalesService =
-                                    scope.ServiceProvider
-                                        .GetRequiredService<ISalesService>();
-                                var scopedIRedisService =
-                                    scope.ServiceProvider
-                                        .GetRequiredService<IRedisService>();
+        //                try
+        //                {
+        //                    result = consumer.Consume(cancellationToken);
+        //                }
+        //                catch (ConsumeException e)
+        //                {
+        //                    _logger.LogInformation(e, e.Message);
+        //                }
 
-                                var verifyingCustomerDTO = Newtonsoft.Json.JsonConvert.DeserializeObject<VerifyingCustomerDTO>(result.Message.Value);
+        //                if (result == null)
+        //                {
+        //                    continue;
+        //                }
 
-                                Sales data = await scopedIRedisService.GetAsync<Sales>($"{PrefixRedisKey.SalesKey}:{verifyingCustomerDTO.SalesId}");
-                                if (data == null)
-                                {
-                                    data = await scopedISalesService.GetSalesByIdAsync(verifyingCustomerDTO.SalesId);
-                                }
+        //                try
+        //                {
+        //                    _logger.LogInformation($"Topic {topic} Consumed Result : {JsonConvert.SerializeObject(result)}");
 
-                                if (data != null)
-                                {
-                                    data.SalesStatus =
-                                    verifyingCustomerDTO.StatusCustomer == CustomerStatus.Active ?
-                                    SalesStatus.Approved : SalesStatus.Rejected;
+        //                    using (var scope = Services.CreateScope())
+        //                    {
+        //                        var scopedISalesService =
+        //                            scope.ServiceProvider
+        //                                .GetRequiredService<ISalesService>();
+        //                        var scopedIRedisService =
+        //                            scope.ServiceProvider
+        //                                .GetRequiredService<IRedisService>();
 
-                                    await scopedISalesService.UpdateSalesAsync(data);
-                                    await scopedIRedisService.DeleteAsync($"{PrefixRedisKey.SalesKey}:{verifyingCustomerDTO.SalesId}");
-                                }
-                            }
-                        }
-                        catch (ConsumeException e)
-                        {
-                            _logger.LogInformation(e, e.Message);
-                        }
+        //                        var verifyingCustomerDTO = JsonConvert.DeserializeObject<VerifyingCustomerDTO>(result.Message.Value);
+        //                        await scopedISalesService.ApproveRejectSales(verifyingCustomerDTO);
+        //                        await consumeAsync(result, cancellationToken);
+        //                    }
 
-                        if (result == null)
-                        {
-                            continue;
-                        }
-
-                        try
-                        {
-                            _logger.LogInformation($"Topic {topic} Consumed Result : {JsonConvert.SerializeObject(result)}");
-
-                            await consumeAsync(result, cancellationToken);
-                            consumer.Commit(result);
-                        }
-                        catch (OperationCanceledException e)
-                        {
-                            throw e;
-                        }
-                        catch (Exception e)
-                        {
-                            if (!commitOnError)
-                            {
-                                throw e;
-                            }
-                            consumer.Commit(result);
-                        }
-                    }
-                }
-                catch (OperationCanceledException e)
-                {
-                    _logger.LogWarning(e, $"Stopped consuming topic \"{topic}\".");
-                }
-                finally
-                {
-                    consumer.Close();
-                }
-            }
-        }
+        //                    consumer.Commit(result);
+        //                }
+        //                catch (OperationCanceledException e)
+        //                {
+        //                    throw e;
+        //                }
+        //                catch (Exception e)
+        //                {
+        //                    if (!commitOnError)
+        //                    {
+        //                        throw e;
+        //                    }
+        //                    consumer.Commit(result);
+        //                }
+        //            }
+        //        }
+        //        catch (OperationCanceledException e)
+        //        {
+        //            _logger.LogWarning(e, $"Stopped consuming topic \"{topic}\".");
+        //        }
+        //        finally
+        //        {
+        //            consumer.Close();
+        //        }
+        //    }
+        //}
     }
 }

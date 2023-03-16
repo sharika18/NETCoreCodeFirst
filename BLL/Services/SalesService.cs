@@ -2,6 +2,7 @@
 using BLL.DTO;
 using BLL.Interfaces;
 using BLL.Kafka;
+using DAL.Interfaces;
 using DAL.Models;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -22,21 +23,23 @@ namespace BLL.Services
         private readonly IKafkaSender _kafkaSender;
         private IRedisService _redis;
         private readonly ILogger<SalesService> _logger;
-        private string topicVerifyConsumer = "";
+        private string topic = "";
 
-        public SalesService(
-            IUnitOfWork unitOfWork, 
-            IConfiguration config, 
-            IKafkaSender kafkaSender, 
-            IRedisService redis,
-            ILogger<SalesService> logger)
+        public SalesService
+            (
+                IUnitOfWork unitOfWork, 
+                IConfiguration config, 
+                IKafkaSender kafkaSender, 
+                IRedisService redis,
+                ILogger<SalesService> logger
+            )
         {
             _unitOfWork = unitOfWork;
             _config = config;
             _kafkaSender = kafkaSender;
             _redis = redis;
             _logger = logger;
-            topicVerifyConsumer = _config.GetValue<string>("Topic:OrderCreated");
+            topic = _config.GetValue<string>("Topic:OrderCreated");
         }
 
         public async Task<List<Sales>> GetAllSalesAsync()
@@ -50,11 +53,20 @@ namespace BLL.Services
 
         public async Task<Sales> GetSalesByIdAsync(Guid SalesId)
         {
-            _logger.LogInformation("Getting All Data Sales");
-            var result = await _unitOfWork.SalesRepository.GetAll()
-                .Where(x => x.SalesId == SalesId)
-                .FirstOrDefaultAsync();
-            return result;
+            _logger.LogInformation("Getting Sales By Id");
+            Sales Sales = await _redis.GetAsync<Sales>($"{PrefixRedisKey.SalesKey}:{SalesId}");
+
+            if (Sales == null)
+            {
+                Sales = await _unitOfWork.SalesRepository.GetAll()
+                    .Where(x => x.SalesId == SalesId)
+                    .FirstOrDefaultAsync();
+
+                TimeSpan expirition = new TimeSpan(1, 0, 00);
+                await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{SalesId}", Sales, expirition);
+            }
+
+            return Sales;
         }
 
         public async Task CreateSalesAsync(Sales data)
@@ -76,10 +88,10 @@ namespace BLL.Services
             //    CustomerId = data.CustomerId
             //};
 
-            await _kafkaSender.SendAsync(topicVerifyConsumer, data);
+            await _kafkaSender.SendAsync(topic, data);
         }
 
-        public async Task UpdateSalesAsync(Sales data)
+        public async Task<Sales> UpdateSalesAsync(Sales data)
         {
             bool isExist = _unitOfWork.SalesRepository.IsExist(x => x.SalesId == data.SalesId);
 
@@ -90,6 +102,7 @@ namespace BLL.Services
             }
             _unitOfWork.SalesRepository.Edit(data);
             await _unitOfWork.SaveAsync();
+            return data;
         }
 
         public async Task DeleteSalesAsync(Guid SalesId)
@@ -104,13 +117,26 @@ namespace BLL.Services
             await _unitOfWork.SaveAsync();
         }
 
+        public async Task ApproveRejectSales(VerifyingCustomerDTO verifyingCustomerdata)
+        {
+            Sales data = await _redis.GetAsync<Sales>($"{PrefixRedisKey.SalesKey}:{verifyingCustomerdata.SalesId}");
+            if (data == null)
+            {
+                data = await GetSalesByIdAsync(verifyingCustomerdata.SalesId);
+            }
+
+            if (data != null)
+            {
+                data.SalesStatus =
+                verifyingCustomerdata.CustomerStatus == CustomerStatus.Active ?
+                SalesStatus.Approved : SalesStatus.Rejected;
+
+                await UpdateSalesAsync(data);
+                await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{verifyingCustomerdata.SalesId}");
+            }
+        }
 
     }
 
-    public static class SalesStatus
-    {
-        public const string Verifying = "Verifying";
-        public const string Approved = "Approved";
-        public const string Rejected = "Rejected";
-    }
+    
 }

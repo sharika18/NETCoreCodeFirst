@@ -8,6 +8,6 @@ namespace BLL.DTO
     {
         public Guid SalesId { get; set; }
         public Guid CustomerId { get; set; }
-        public string StatusCustomer { get; set; }
+        public string CustomerStatus { get; set; }
     }
 }

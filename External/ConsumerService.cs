@@ -18,7 +18,7 @@ namespace External
         private readonly IConfiguration _config;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly ILogger _logger;
-        private readonly FakultasConsumerService _fakultasConsumer;
+        private readonly ConsumeProcess _Consumer;
 
         public ConsumerService(IConfiguration config, ILogger<ConsumerService> logger)
         {
@@ -33,7 +33,7 @@ namespace External
                 AllowAutoCreateTopics = true,
                 IsolationLevel = IsolationLevel.ReadCommitted
             };
-            _fakultasConsumer = new FakultasConsumerService(_logger);
+            _Consumer = new ConsumeProcess(_logger);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +43,7 @@ namespace External
 
             List<Task> tasks = new List<Task>
             {
-                RegisterTopic(validationPartTwoComplete,_fakultasConsumer,stoppingToken),
+                RegisterTopic(validationPartTwoComplete,_Consumer,stoppingToken),
             };
 
             await Task.WhenAll(tasks.ToArray());

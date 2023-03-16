@@ -4,7 +4,7 @@ using DAL.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
+using DAL.Interfaces;
 namespace DAL.Repositories
 {
     public class UnitOfWork :IDisposable, IUnitOfWork
