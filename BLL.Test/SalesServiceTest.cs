@@ -161,6 +161,25 @@ namespace BLL.Test
             actual.Should().BeEquivalentTo(expected);
         }
 
+        [Theory]
+        [InlineData("4fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        public async Task GetSalesByIdAsync_Redis_Success(string salesId)
+        {
+            //Expected
+            var id = Guid.Parse(salesId);
+            var expected = sales.First(x => x.SalesId == id);
+
+            var svc = CreateSalesService();
+
+            //Actual
+            var actual = await svc.GetSalesByIdAsync(id);
+            //Assert
+            actual.Should().BeEquivalentTo(expected);
+
+            _redis.Verify(x => x.GetAsync<Sales>($"{PrefixRedisKey.SalesKey}:{salesId}"), Times.Once);
+            _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{salesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.Never);
+        }
+
         [Fact]
         public async Task CreateSalesAsync_Success()
         {
@@ -184,6 +203,7 @@ namespace BLL.Test
 
             //assert
             _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.Once);
         }
         //[Theory]
         //[InlineData("7fa85f64-5717-4562-b3fc-2c963f66afa6")]

@@ -99,6 +99,11 @@ namespace BLL.Services
             _logger.LogInformation($"Checking product price");
             var dataProduct = await _unitOfWork.ProductRepository.GetByIdAsync(data.ProductId);
             
+            if (dataProduct == null)
+            {
+                throw new Exception($"Product ID {data.ProductId} not found");
+            }
+
             data.UnitPrice = dataProduct.ListPrice;
             data.SalesAmount = data.OrderQuantity * dataProduct.ListPrice;
             data.SalesStatus = SalesStatus.Verifying;
@@ -117,14 +122,8 @@ namespace BLL.Services
             await _unitOfWork.SalesRepository.AddAsync(data);
             await _unitOfWork.SaveAsync();
 
-            TimeSpan expirition = new TimeSpan(2, 0, 00);
             await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
-            //var messageSendToKafka = new VerifyingCustomerDTO()
-            //{
-            //    SalesId = data.SalesId,
-            //    CustomerId = data.CustomerId
-            //};
-
+            
             await SendToOrderCreated(data);
         }
 
