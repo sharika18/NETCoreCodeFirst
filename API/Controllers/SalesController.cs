@@ -85,13 +85,14 @@ namespace API.Controllers
         {
             try
             {
+                _logger.LogInformation($"Create Sales/Order Started");
                 Model.Sales data = _mapper.Map<Model.Sales>(SalesCreateDTO);
                 await _salesService.CreateSalesAsync(data);
                 return new OkResult();
             }
-            catch
+            catch(Exception e)
             {
-                return new BadRequestResult();
+                return new BadRequestObjectResult(e.Message.ToString());
             }
         }
 
@@ -140,6 +141,22 @@ namespace API.Controllers
                 return new BadRequestResult();
             }
 
+        }
+
+        /// <summary>
+        /// Get all Territories
+        /// </summary>
+        /// <response code="200">Request ok.</response>
+        [HttpGet]
+        [Route("Territories")]
+        [ProducesResponseType(typeof(List<SalesWithDependencyDTO>), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        public async Task<ActionResult> GetAllTerritoriesAsync()
+        {
+            //List<string> resultt = _SalesService.getUsernames(10);
+            List<Model.Territories> result = await _salesService.GetAllTerritoriesAsync();
+            List<TerritoriesDTO> mappedResult = _mapper.Map<List<TerritoriesDTO>>(result);
+            return new OkObjectResult(mappedResult);
         }
     }
 }

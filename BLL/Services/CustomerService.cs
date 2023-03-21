@@ -40,11 +40,7 @@ namespace BLL.Services
             topic = _config.GetValue<string>("Topic:VerifyConsumer");
         }
 
-        public async Task<List<Customer>> GetAllCustomerAsync()
-        {
-            return await _unitOfWork.CustomerRepository.GetAll()
-                .ToListAsync();
-        }
+        
 
         public async Task<Customer> GetCustomerByIdAsync(Guid CustomerId)
         {
@@ -64,6 +60,36 @@ namespace BLL.Services
             return Customer;
         }
 
+
+        public async Task VerifyingCustomer(Sales data)
+        {
+            _logger.LogInformation($"Verifying Customer Status with Customer ID {data.CustomerId} for Sales/Order ID {data.SalesId}");
+            Customer customerData = await GetCustomerByIdAsync(data.CustomerId);
+
+            string statusCustomer = CustomerStatus.NotFound;
+
+            if (customerData != null)
+            {
+                statusCustomer = customerData.CustomerIsActive ? CustomerStatus.Active : CustomerStatus.InActive;
+            }
+
+            var verifyingCustomerDTO = new VerifyingCustomerDTO()
+            {
+                SalesId = data.SalesId,
+                CustomerId = data.CustomerId,
+                CustomerStatus = statusCustomer
+            };
+
+            _logger.LogInformation($"Send data with Sales/Order ID {data.SalesId} to Kafka with Topic : VerifyCustomer");
+            await _kafkaSender.SendAsync(topic, verifyingCustomerDTO);
+        }
+
+        /*
+        public async Task<List<Customer>> GetAllCustomerAsync()
+        {
+            return await _unitOfWork.CustomerRepository.GetAll()
+                .ToListAsync();
+        }
         public async Task CreateCustomerAsync(Customer data)
         {
             await _unitOfWork.CustomerRepository.AddAsync(data);
@@ -94,27 +120,7 @@ namespace BLL.Services
             _unitOfWork.CustomerRepository.Delete(x => x.CustomerId == CustomerId);
             await _unitOfWork.SaveAsync();
         }
-
-        public async Task VerifyingCustomer(Sales data)
-        {
-            Customer customerData = await GetCustomerByIdAsync(data.CustomerId);
-
-            string statusCustomer = CustomerStatus.NotFound;
-
-            if (customerData != null)
-            {
-                statusCustomer = customerData.CustomerIsActive ? CustomerStatus.Active : CustomerStatus.InActive;
-            }
-
-            var verifyingCustomerDTO = new VerifyingCustomerDTO()
-            {
-                SalesId = data.SalesId,
-                CustomerId = data.CustomerId,
-                CustomerStatus = statusCustomer
-            };
-
-            await _kafkaSender.SendAsync(topic, verifyingCustomerDTO);
-        }
+        */
     }
 
     

@@ -7,6 +7,7 @@ namespace API.DTO
 {
     public class TerritoriesDTO
     {
+        public string TerritoriesId { get; set; }
         public string Country { get; set; }
     }
 }

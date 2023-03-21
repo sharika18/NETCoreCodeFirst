@@ -9,9 +9,9 @@ namespace BLL.Interfaces
     public interface IProductService
     {
         Task<List<Product>> GetAllProductAsync();
-        Task CreateProductAsync(Product data);
         Task<Product> GetProductByIdAsync(Guid id);
-        Task UpdateProductAsync(Product data);
-        Task DeleteProductAsync(Guid ProductId);
+        //Task CreateProductAsync(Product data);
+        //Task UpdateProductAsync(Product data);
+        //Task DeleteProductAsync(Guid ProductId);
     }
 }

@@ -70,75 +70,76 @@ namespace API.Controllers
             return new NotFoundResult();
         }
 
-        /// <summary>
-        /// Create Product 
-        /// </summary>
-        /// <param name="ProductDTO">Product data.</param>
-        /// <response code="200">Request ok.</response>
-        /// <response code="400">Request failed because of an exception.</response>
-        [HttpPost]
-        [Route("")]
-        [ProducesResponseType(typeof(ProductDTO), 200)]
-        [ProducesResponseType(typeof(string), 400)]
-        public async Task<ActionResult> CreateAsync([FromBody] ProductCreateDTO ProductCreateDTO)
-        {
-            try
-            {
-                Model.Product data = _mapper.Map<Model.Product>(ProductCreateDTO);
-                await _productService.CreateProductAsync(data);
-                return new OkResult();
-            }
-            catch
-            {
-                return new BadRequestResult();
-            }
-        }
 
-        /// <summary>
-        /// Update Product 
-        /// </summary>
-        /// <param name="ProductDTO">Product data.</param>
-        /// <response code="200">Request ok.</response>
-        /// <response code="400">Request failed because of an exception.</response>
-        [HttpPut]
-        [Route("")]
-        [ProducesResponseType(typeof(ProductDTO), 200)]
-        [ProducesResponseType(typeof(string), 400)]
-        public async Task<ActionResult> UpdateAscync([FromBody] ProductDTO ProductDTO)
-        {
-            try
-            {
-                Model.Product data = _mapper.Map<Model.Product>(ProductDTO);
-                await _productService.UpdateProductAsync(data);
-                return new OkResult();
-            }
-            catch
-            {
-                return new BadRequestResult();
-            }
+        ///// <summary>
+        ///// Create Product 
+        ///// </summary>
+        ///// <param name="ProductDTO">Product data.</param>
+        ///// <response code="200">Request ok.</response>
+        ///// <response code="400">Request failed because of an exception.</response>
+        //[HttpPost]
+        //[Route("")]
+        //[ProducesResponseType(typeof(ProductDTO), 200)]
+        //[ProducesResponseType(typeof(string), 400)]
+        //public async Task<ActionResult> CreateAsync([FromBody] ProductCreateDTO ProductCreateDTO)
+        //{
+        //    try
+        //    {
+        //        Model.Product data = _mapper.Map<Model.Product>(ProductCreateDTO);
+        //        await _productService.CreateProductAsync(data);
+        //        return new OkResult();
+        //    }
+        //    catch
+        //    {
+        //        return new BadRequestResult();
+        //    }
+        //}
 
-        }
+        ///// <summary>
+        ///// Update Product 
+        ///// </summary>
+        ///// <param name="ProductDTO">Product data.</param>
+        ///// <response code="200">Request ok.</response>
+        ///// <response code="400">Request failed because of an exception.</response>
+        //[HttpPut]
+        //[Route("")]
+        //[ProducesResponseType(typeof(ProductDTO), 200)]
+        //[ProducesResponseType(typeof(string), 400)]
+        //public async Task<ActionResult> UpdateAscync([FromBody] ProductDTO ProductDTO)
+        //{
+        //    try
+        //    {
+        //        Model.Product data = _mapper.Map<Model.Product>(ProductDTO);
+        //        await _productService.UpdateProductAsync(data);
+        //        return new OkResult();
+        //    }
+        //    catch
+        //    {
+        //        return new BadRequestResult();
+        //    }
 
-        /// <summary>
-        /// Delete Product
-        /// </summary>
-        /// <param name="ProductId">Product data.</param>
-        /// <response code="200">Request ok.</response>
-        [HttpDelete]
-        [Route("{ProductId}")]
-        [ProducesResponseType(typeof(ProductDTO), 200)]
-        public async Task<ActionResult> DeleteAsync([FromRoute] Guid ProductId)
-        {
-            try
-            {
-                await _productService.DeleteProductAsync(ProductId);
-                return new OkResult();
-            }
-            catch
-            {
-                return new BadRequestResult();
-            }
+        //}
 
-        }
+        ///// <summary>
+        ///// Delete Product
+        ///// </summary>
+        ///// <param name="ProductId">Product data.</param>
+        ///// <response code="200">Request ok.</response>
+        //[HttpDelete]
+        //[Route("{ProductId}")]
+        //[ProducesResponseType(typeof(ProductDTO), 200)]
+        //public async Task<ActionResult> DeleteAsync([FromRoute] Guid ProductId)
+        //{
+        //    try
+        //    {
+        //        await _productService.DeleteProductAsync(ProductId);
+        //        return new OkResult();
+        //    }
+        //    catch
+        //    {
+        //        return new BadRequestResult();
+        //    }
+
+        //}
     }
 }

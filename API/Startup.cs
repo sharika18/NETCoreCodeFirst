@@ -64,7 +64,7 @@ namespace API
             services.AddSingleton<IKafkaConsumer, KafkaConsumer>();
 
             services.AddSingleton<IHostedService, ConsumerService>();
-            services.AddSingleton<IHostedService, SalesReceiveKafka>();
+            //services.AddSingleton<IHostedService, SalesReceiveKafka>();
             //services.AddSingleton<IHostedService, ReceiveTopicOrderCreated>();
             services.AddHostedService<ReceiveTopicOrderCreated>();
             services.AddHostedService<ReceiveTopicVerifyCustomer>();

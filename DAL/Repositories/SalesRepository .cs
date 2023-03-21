@@ -6,6 +6,9 @@ namespace DAL.Repositories
 {
     public class SalesRepository : BaseRepository<Sales>, ISalesRepository
     {
-        public SalesRepository(DbContext dbContext) : base(dbContext) { }
+        public SalesRepository(DbContext dbContext) : base(dbContext) 
+        {
+
+        }
     }
 }

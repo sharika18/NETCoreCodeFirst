@@ -57,38 +57,38 @@ namespace BLL.Services
             return product;
         }
 
-        public async Task CreateProductAsync(Product data)
-        {
-            await _unitOfWork.ProductRepository.AddAsync(data);
-            await _unitOfWork.SaveAsync();
-        }
+        //public async Task CreateProductAsync(Product data)
+        //{
+        //    await _unitOfWork.ProductRepository.AddAsync(data);
+        //    await _unitOfWork.SaveAsync();
+        //}
 
-        public async Task UpdateProductAsync(Product data)
-        {
-            bool isExist = _unitOfWork.ProductRepository.IsExist(x => x.ProductId == data.ProductId);
+        //public async Task UpdateProductAsync(Product data)
+        //{
+        //    bool isExist = _unitOfWork.ProductRepository.IsExist(x => x.ProductId == data.ProductId);
 
-            if (!isExist)
-            {
-                throw new Exception($"Product with id {data.ProductId} not exist");
+        //    if (!isExist)
+        //    {
+        //        throw new Exception($"Product with id {data.ProductId} not exist");
 
-            }
-            _unitOfWork.ProductRepository.Edit(data);
-            await _unitOfWork.SaveAsync();
-            await _redis.DeleteAsync($"{PrefixRedisKey.ProductKey}:{data.ProductId}");
-        }
+        //    }
+        //    _unitOfWork.ProductRepository.Edit(data);
+        //    await _unitOfWork.SaveAsync();
+        //    await _redis.DeleteAsync($"{PrefixRedisKey.ProductKey}:{data.ProductId}");
+        //}
 
-        public async Task DeleteProductAsync(Guid ProductId)
-        {
-            var isExist = _unitOfWork.ProductRepository.IsExist(x => x.ProductId == ProductId);
-            if (!isExist)
-            {
-                throw new Exception($"Product with id {ProductId} not exist");
-            }
+        //public async Task DeleteProductAsync(Guid ProductId)
+        //{
+        //    var isExist = _unitOfWork.ProductRepository.IsExist(x => x.ProductId == ProductId);
+        //    if (!isExist)
+        //    {
+        //        throw new Exception($"Product with id {ProductId} not exist");
+        //    }
 
-            _unitOfWork.ProductRepository.Delete(x => x.ProductId == ProductId);
-            await _unitOfWork.SaveAsync();
-            await _redis.DeleteAsync($"{PrefixRedisKey.ProductKey}:{ProductId}");
-        }
+        //    _unitOfWork.ProductRepository.Delete(x => x.ProductId == ProductId);
+        //    await _unitOfWork.SaveAsync();
+        //    await _redis.DeleteAsync($"{PrefixRedisKey.ProductKey}:{ProductId}");
+        //}
 
     }
 }

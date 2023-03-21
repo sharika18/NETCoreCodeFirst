@@ -14,6 +14,7 @@ namespace DAL.Repositories
         public ISalesRepository SalesRepository { get; }
         public IProductRepository ProductRepository { get; }
         public ICustomerRepository CustomerRepository { get; }
+        public ITerritoriesRepository TerritoriesRepository { get; }
         public UnitOfWork(Context context)
         {
             dbContext = context;
@@ -21,6 +22,7 @@ namespace DAL.Repositories
             SalesRepository = new SalesRepository(context);
             ProductRepository = new ProductRepository(context);
             CustomerRepository = new CustomerRepository(context);
+            TerritoriesRepository = new TerritoriesRepository(context);
         }
 
         public void Save()

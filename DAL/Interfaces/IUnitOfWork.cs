@@ -10,7 +10,7 @@ namespace DAL.Interfaces
         public ISalesRepository SalesRepository { get; }
         public IProductRepository ProductRepository { get; }
         public ICustomerRepository CustomerRepository { get; }
-
+        public ITerritoriesRepository TerritoriesRepository { get; }
         void Save();
         Task SaveAsync(CancellationToken cancellationToken = default(CancellationToken));
         IDbContextTransaction StartNewTransaction();

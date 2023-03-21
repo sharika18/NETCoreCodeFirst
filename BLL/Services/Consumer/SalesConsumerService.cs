@@ -29,7 +29,7 @@ namespace BLL.Services.Consumer
 
         public async Task ConsumeAsync<TKey>(ConsumeResult<TKey, string> consumeResult, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation(consumeResult.Message.Value);
+            _logger.LogInformation($"Topic Consumed : {consumeResult.Message.Value}");
             var verifyingCustomerDTO = JsonConvert.DeserializeObject<VerifyingCustomerDTO>(consumeResult.Message.Value);
             using (var scope = Services.CreateScope())
             {

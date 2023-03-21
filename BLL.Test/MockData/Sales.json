@@ -1,0 +1,24 @@
+[
+  {
+    "salesId": "4fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "customerId": "8d02546f-5839-b1b2-afe4-002c344f99a9",
+    "productId": "fae5c362-0000-018c-c382-0a00383aecfc",
+    "territoriesId": "057bcda2-3743-4b41-7221-1b6c9b25823e",
+    "orderDate": "2023-03-21T17:22:01.756408",
+    "orderQuantity": 5,
+    "unitPrice": 238407,
+    "salesAmount": 1192035,
+    "salesStatus": "Approved"
+  },
+  {
+    "salesId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "customerId": "44215735-dbfb-38fc-f12f-0008dd146cee",
+    "productId": "10827462-769a-6627-120e-04709c00d27a",
+    "territoriesId": "cb181a14-1a4d-5d32-e777-19ae8cae0666",
+    "orderDate": "2023-03-21T18:31:01.817352",
+    "orderQuantity": 2,
+    "unitPrice": 107999,
+    "salesAmount": 215998,
+    "salesStatus": "Rejected"
+  }
+]

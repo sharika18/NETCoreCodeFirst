@@ -43,6 +43,7 @@ namespace BLL.Kafka
 
         public Task RegisterTopic(string topic, IConsumeProcess process, CancellationToken stoppingToken, CancellationTokenSource cancellationTokenSource)
         {
+            _logger.LogInformation($"Trying Consuming {topic}");
             _cancellationTokenSource = cancellationTokenSource;
             return Task.Run(async () =>
             {
@@ -89,7 +90,7 @@ namespace BLL.Kafka
 
                         try
                         {
-                            _logger.LogInformation($"Topic {topic} Consumed Result : {JsonConvert.SerializeObject(result)}");
+                            //_logger.LogInformation($"Topic {topic} Consumed Result : {JsonConvert.SerializeObject(result)}");
 
                             await consumeAsync(result, cancellationToken);
                             consumer.Commit(result);
