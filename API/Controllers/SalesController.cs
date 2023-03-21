@@ -114,9 +114,9 @@ namespace API.Controllers
                 await _salesService.UpdateSalesAsync(data);
                 return new OkResult();
             }
-            catch
+            catch(Exception e)
             {
-                return new BadRequestResult();
+                return new BadRequestObjectResult(e.Message);
             }
 
         }

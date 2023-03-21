@@ -161,6 +161,30 @@ namespace BLL.Test
             actual.Should().BeEquivalentTo(expected);
         }
 
+        [Fact]
+        public async Task CreateSalesAsync_Success()
+        {
+            //Arrange
+            var expected = new Sales()
+            {
+                ProductId = Guid.Parse("10827462-769A-6627-120E-04709C00D27A"),
+                CustomerId = Guid.Parse("8D02546F-5839-B1B2-AFE4-002C344F99A9"),
+                TerritoriesId = Guid.Parse("CB181A14-1A4D-5D32-E777-19AE8CAE0666"),
+                OrderQuantity = 1,
+                UnitPrice = 101,
+                SalesAmount = 101,
+                OrderDate = DateTime.Now
+            };
+
+            var svc = CreateSalesService();
+
+            //Actual
+            Func<Task> act = async () => { await svc.CreateSalesAsync(expected); };
+            await act.Should().NotThrowAsync<Exception>();
+
+            //assert
+            _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
         //[Theory]
         //[InlineData("7fa85f64-5717-4562-b3fc-2c963f66afa6")]
         //public async Task UpdateFakultasAsync_Succees(string salesId)

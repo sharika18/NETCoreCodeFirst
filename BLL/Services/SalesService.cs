@@ -25,6 +25,8 @@ namespace BLL.Services
         private readonly ILogger<SalesService> _logger;
         private string topic = "";
 
+        private TimeSpan expirition = new TimeSpan(2, 0, 00);
+
         public SalesService
             (
                 IUnitOfWork unitOfWork, 
@@ -64,41 +66,41 @@ namespace BLL.Services
                     .Include(a => a.Customer)
                     .Include(a => a.Territories)
                     .FirstOrDefaultAsync();
-
-                TimeSpan expirition = new TimeSpan(1, 0, 00);
                 await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{SalesId}", Sales, expirition);
             }
 
             return Sales;
         }
 
-        public async Task<bool> IsSalesStatusVerifying(Guid CustomerId)
-        {
-            bool isVerifying = false;
-            var dataSales =  _unitOfWork.SalesRepository.GetAll().Where(x => x.CustomerId == CustomerId).FirstOrDefault();
-            if (dataSales != null)
-            {
-                isVerifying = dataSales.SalesStatus == SalesStatus.Verifying ? true : false;
-            }
-
-            return isVerifying;
-        }
-
-        public async Task<Sales> AssignPrice(Sales data)
+        public async Task IsSalesStatusVerifying(Guid CustomerId)
         {
             _logger.LogInformation($"Verifying previous status Sales/Order");
-            bool isVerifying = await IsSalesStatusVerifying(data.CustomerId);
+            bool isVerifying = false;
+            var prevSalesStatus =  _unitOfWork.SalesRepository.GetAll()
+                                    .Where(x => x.CustomerId == CustomerId)
+                                    .OrderByDescending(x => x.OrderDate)
+                                    .Select(x => x.SalesStatus)
+                                    .FirstOrDefault();
+            if (prevSalesStatus != null)
+            {
+                isVerifying = prevSalesStatus == SalesStatus.Verifying ? true : false;
+            }
 
             if (isVerifying)
             {
-                throw new Exception($"Customer with ID {data.CustomerId} still has unfinished previous order");
+                throw new Exception($"Customer with ID {CustomerId} still has unfinished previous order");
             }
+        }
+
+        public async Task<Sales> AssignSalesValue(Sales data)
+        {
+            await IsSalesStatusVerifying(data.CustomerId);
 
             _logger.LogInformation($"Checking product price");
             var dataProduct = await _unitOfWork.ProductRepository.GetByIdAsync(data.ProductId);
-
+            
             data.UnitPrice = dataProduct.ListPrice;
-            data.SalesAmount = data.OrderQuantity * data.UnitPrice;
+            data.SalesAmount = data.OrderQuantity * dataProduct.ListPrice;
             data.SalesStatus = SalesStatus.Verifying;
 
             return data;
@@ -106,25 +108,37 @@ namespace BLL.Services
 
         public async Task CreateSalesAsync(Sales data)
         {
-            var finalData = await AssignPrice(data);
+            var assignSalesValue = await AssignSalesValue(data);
+            data.UnitPrice = assignSalesValue.UnitPrice;
+            data.SalesAmount = assignSalesValue.SalesAmount;
+            data.SalesStatus = assignSalesValue.SalesStatus;
 
             _logger.LogInformation($"Saving data to database and redis");
-            await _unitOfWork.SalesRepository.AddAsync(finalData);
+            await _unitOfWork.SalesRepository.AddAsync(data);
             await _unitOfWork.SaveAsync();
 
             TimeSpan expirition = new TimeSpan(2, 0, 00);
-            await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{finalData.SalesId}", finalData, expirition);
+            await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
             //var messageSendToKafka = new VerifyingCustomerDTO()
             //{
             //    SalesId = data.SalesId,
             //    CustomerId = data.CustomerId
             //};
 
-            _logger.LogInformation($"Send data with Sales/Order ID {finalData.SalesId} to Kafka with Topic : OrderCreated");
-            await _kafkaSender.SendAsync(topic, finalData);
+            await SendToOrderCreated(data);
         }
 
         public async Task UpdateSalesAsync(Sales data)
+        { 
+            var assignSalesValue = await AssignSalesValue(data);
+            data.UnitPrice = assignSalesValue.UnitPrice;
+            data.SalesAmount = assignSalesValue.SalesAmount;
+            data.SalesStatus = assignSalesValue.SalesStatus;
+            await UpdateSales(data);
+            await SendToOrderCreated(data);
+        }
+
+        public async Task UpdateSales(Sales data)
         {
             _logger.LogInformation($"Check if Sales/Order ID {data.SalesId} is Exist");
             bool isExist = _unitOfWork.SalesRepository.IsExist(x => x.SalesId == data.SalesId);
@@ -135,36 +149,12 @@ namespace BLL.Services
 
             }
 
-            try
-            {
-                var finalData = await AssignPrice(data);
+            _unitOfWork.SalesRepository.Edit(data);
 
-                data.UnitPrice = finalData.UnitPrice;
-                data.SalesAmount = finalData.SalesAmount;
-                data.SalesStatus = finalData.SalesStatus;
-                
-                _unitOfWork.SalesRepository.Edit(data);
+            _logger.LogInformation($"Saving to database, Delete Previous data from redis, Savinf new data to redis");
+            await _unitOfWork.SaveAsync();
 
-
-                _logger.LogInformation($"Saving to database, Delete Previous data from redis, Savinf new data to redis");
-                await _unitOfWork.SaveAsync();
-                await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}");
-
-                TimeSpan expirition = new TimeSpan(2, 0, 00);
-                await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
-                //var messageSendToKafka = new VerifyingCustomerDTO()
-                //{
-                //    SalesId = data.SalesId,
-                //    CustomerId = data.CustomerId
-                //};
-
-                _logger.LogInformation($"Send data with Sales/Order ID {data.SalesId} to Kafka with Topic : OrderCreated");
-                await _kafkaSender.SendAsync(topic, data);
-            }
-            catch (Exception e)
-            {
-                
-            }
+            
         }
 
 
@@ -192,9 +182,16 @@ namespace BLL.Services
                     _logger.LogInformation($"Order Rejected either because Customer is InActive or Not Found");
                 }
 
-                await UpdateSalesAsync(data);
-                await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{verifyingCustomerdata.SalesId}");
+                await UpdateSales(data);
+                await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}");
+                await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
             }
+        }
+
+        public async Task SendToOrderCreated(Sales data)
+        {
+            _logger.LogInformation($"Send data with Sales/Order ID {data.SalesId} to Kafka with Topic : OrderCreated");
+            await _kafkaSender.SendAsync(topic, data);
         }
 
         public async Task<List<Territories>> GetAllTerritoriesAsync()

@@ -9,6 +9,7 @@ namespace DAL.Models
         protected override void OnModelCreating(ModelBuilder builder)
         {
             //builder.Entity<Fakultas>().HasIndex(a => a.NamaFakultas).IsUnique(true);
+            builder.Entity<Sales>().HasKey(x => x.SalesId);
         }
 
         public DbSet<Category> Category { get; set; }
