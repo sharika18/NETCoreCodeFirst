@@ -12,8 +12,7 @@ namespace BLL.Interfaces
         Task<List<Sales>> GetAllSalesAsync();
         Task<Sales> GetSalesByIdAsync(Guid id);
         Task CreateSalesAsync(Sales data);
-        Task<Sales> UpdateSalesAsync(Sales data);
-        Task DeleteSalesAsync(Guid SalesId);
+        Task UpdateSalesAsync(Sales data);
         Task ApproveRejectSales(VerifyingCustomerDTO verifyingCustomerdata);
 
         //Territories

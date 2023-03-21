@@ -106,34 +106,12 @@ namespace API.Controllers
         [Route("")]
         [ProducesResponseType(typeof(SalesDTO), 200)]
         [ProducesResponseType(typeof(string), 400)]
-        public async Task<ActionResult> UpdateAscync([FromBody] SalesDTO SalesDTO)
+        public async Task<ActionResult> UpdateAscync([FromBody] SalesCreateDTO SalesDTO)
         {
             try
             {
                 Model.Sales data = _mapper.Map<Model.Sales>(SalesDTO);
                 await _salesService.UpdateSalesAsync(data);
-                return new OkResult();
-            }
-            catch
-            {
-                return new BadRequestResult();
-            }
-
-        }
-
-        /// <summary>
-        /// Delete Sales
-        /// </summary>
-        /// <param name="SalesId">Sales data.</param>
-        /// <response code="200">Request ok.</response>
-        [HttpDelete]
-        [Route("{SalesId}")]
-        [ProducesResponseType(typeof(SalesDTO), 200)]
-        public async Task<ActionResult> DeleteAsync([FromRoute] Guid SalesId)
-        {
-            try
-            {
-                await _salesService.DeleteSalesAsync(SalesId);
                 return new OkResult();
             }
             catch

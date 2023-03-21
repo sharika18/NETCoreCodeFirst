@@ -17,6 +17,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace BLL.Test
 {
@@ -30,13 +32,16 @@ namespace BLL.Test
         private Mock<IKafkaSender> _kafkaSender;
         private Mock<IRedisService> _redis;
         private Mock<ILogger<SalesService>> _logger;
-        public SalesServiceTest()
+
+        ITestOutputHelper output;
+        public SalesServiceTest(ITestOutputHelper output)
         {
-            sales = CommonHelper.LoadDataFromFile<IEnumerable<Sales>>(@"MockData\Fakultas.json");
+            sales = CommonHelper.LoadDataFromFile<IEnumerable<Sales>>(@"MockData\Sales.json");
             _unitOfWork = MockUnitOfWork();
             _kafkaSender = MockIkafkaSender();
             _redis = MockRedis();
             _logger = MockSalesILogger();
+            this.output = output;
         }
 
         #region Mock Dependencies
@@ -125,17 +130,61 @@ namespace BLL.Test
         [Fact]
         public async Task GetAllAsync_Success()
         {
-            //arrange
+            //Expected
             var expected = sales;
 
             var svc = CreateSalesService();
 
-            // act
+            //Actual
             var actual = await svc.GetAllSalesAsync();
 
-            // assert      
+            //Assert      
             actual.Should().BeEquivalentTo(expected);
         }
+
+
+        
+        [Theory]
+        [InlineData("4fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        [InlineData("3fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        public async Task GetSalesByIdAsync_Success(string salesId)
+        {
+            //Expected
+            var id = Guid.Parse(salesId);
+            var expected = sales.First(x => x.SalesId == id);
+
+            var svc = CreateSalesService();
+
+            //Actual
+            var actual = await svc.GetSalesByIdAsync(id);
+            //Assert
+            actual.Should().BeEquivalentTo(expected);
+        }
+
+        //[Theory]
+        //[InlineData("7fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        //public async Task UpdateFakultasAsync_Succees(string salesId)
+        //{
+
+
+        //    Guid id = Guid.Parse(salesId);
+            
+        //    //Expected
+        //    var expected = new Sales
+        //    {
+        //        SalesId = id,
+        //        CustomerId = namaFakultas,,
+        //        ProductId = ,
+
+        //    };
+
+        //    var svc = CreateFakultasService();
+
+        //    var oldData = await svc.GetFakultasByIdAsync(id);
+
+        //    var newData = await svc.UpdateFakultasAsync(expected);
+        //    oldData.Should().NotBeEquivalentTo(newData);
+        //}
         #endregion
     }
 }

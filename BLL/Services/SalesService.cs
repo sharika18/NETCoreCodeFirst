@@ -60,6 +60,9 @@ namespace BLL.Services
             {
                 Sales = await _unitOfWork.SalesRepository.GetAll()
                     .Where(x => x.SalesId == SalesId)
+                    .Include(a => a.Product)
+                    .Include(a => a.Customer)
+                    .Include(a => a.Territories)
                     .FirstOrDefaultAsync();
 
                 TimeSpan expirition = new TimeSpan(1, 0, 00);
@@ -81,7 +84,7 @@ namespace BLL.Services
             return isVerifying;
         }
 
-        public async Task CreateSalesAsync(Sales data)
+        public async Task<Sales> AssignPrice(Sales data)
         {
             _logger.LogInformation($"Verifying previous status Sales/Order");
             bool isVerifying = await IsSalesStatusVerifying(data.CustomerId);
@@ -98,25 +101,32 @@ namespace BLL.Services
             data.SalesAmount = data.OrderQuantity * data.UnitPrice;
             data.SalesStatus = SalesStatus.Verifying;
 
+            return data;
+        }
+
+        public async Task CreateSalesAsync(Sales data)
+        {
+            var finalData = await AssignPrice(data);
 
             _logger.LogInformation($"Saving data to database and redis");
-            await _unitOfWork.SalesRepository.AddAsync(data);
+            await _unitOfWork.SalesRepository.AddAsync(finalData);
             await _unitOfWork.SaveAsync();
 
             TimeSpan expirition = new TimeSpan(2, 0, 00);
-            await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
+            await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{finalData.SalesId}", finalData, expirition);
             //var messageSendToKafka = new VerifyingCustomerDTO()
             //{
             //    SalesId = data.SalesId,
             //    CustomerId = data.CustomerId
             //};
 
-            _logger.LogInformation($"Send data with Sales/Order ID {data.SalesId} to Kafka with Topic : OrderCreated");
-            await _kafkaSender.SendAsync(topic, data);
+            _logger.LogInformation($"Send data with Sales/Order ID {finalData.SalesId} to Kafka with Topic : OrderCreated");
+            await _kafkaSender.SendAsync(topic, finalData);
         }
 
-        public async Task<Sales> UpdateSalesAsync(Sales data)
+        public async Task UpdateSalesAsync(Sales data)
         {
+            _logger.LogInformation($"Check if Sales/Order ID {data.SalesId} is Exist");
             bool isExist = _unitOfWork.SalesRepository.IsExist(x => x.SalesId == data.SalesId);
 
             if (!isExist)
@@ -124,22 +134,39 @@ namespace BLL.Services
                 throw new Exception($"Sales with id {data.SalesId} not exist");
 
             }
-            _unitOfWork.SalesRepository.Edit(data);
-            await _unitOfWork.SaveAsync();
-            return data;
-        }
 
-        public async Task DeleteSalesAsync(Guid SalesId)
-        {
-            var isExist = _unitOfWork.SalesRepository.IsExist(x => x.SalesId == SalesId);
-            if (!isExist)
+            try
             {
-                throw new Exception($"Sales with id {SalesId} not exist");
-            }
+                var finalData = await AssignPrice(data);
 
-            _unitOfWork.SalesRepository.Delete(x => x.SalesId == SalesId);
-            await _unitOfWork.SaveAsync();
+                data.UnitPrice = finalData.UnitPrice;
+                data.SalesAmount = finalData.SalesAmount;
+                data.SalesStatus = finalData.SalesStatus;
+                
+                _unitOfWork.SalesRepository.Edit(data);
+
+
+                _logger.LogInformation($"Saving to database, Delete Previous data from redis, Savinf new data to redis");
+                await _unitOfWork.SaveAsync();
+                await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}");
+
+                TimeSpan expirition = new TimeSpan(2, 0, 00);
+                await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
+                //var messageSendToKafka = new VerifyingCustomerDTO()
+                //{
+                //    SalesId = data.SalesId,
+                //    CustomerId = data.CustomerId
+                //};
+
+                _logger.LogInformation($"Send data with Sales/Order ID {data.SalesId} to Kafka with Topic : OrderCreated");
+                await _kafkaSender.SendAsync(topic, data);
+            }
+            catch (Exception e)
+            {
+                
+            }
         }
+
 
         public async Task ApproveRejectSales(VerifyingCustomerDTO verifyingCustomerdata)
         {
