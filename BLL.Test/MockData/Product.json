@@ -1,0 +1,26 @@
+[
+  {
+    "subCategory": {
+      "subCategoryId": "613fc395-afb8-5738-2a33-d8742072e560",
+      "subCategoryName": "Mountain Bikes"
+    },
+    "productId": "10827462-769a-6627-120e-04709c00d27a",
+    "productName": "Mountain-300 Black, 44",
+    "productDescription": "For true trail addicts.  An extremely durable bike that will go anywhere and keep you in control on challenging terrain - without breaking your budget.",
+    "color": "Black",
+    "listPrice": 107999,
+    "standardCost": 5984354
+  },
+  {
+    "subCategory": {
+      "subCategoryId": "613fc395-afb8-5738-2a33-d8742072e560",
+      "subCategoryName": "Mountain Bikes"
+    },
+    "productId": "cf3b183c-c994-f88c-006e-0571cbae728d",
+    "productName": "Mountain-400-W Silver, 42",
+    "productDescription": "This bike delivers a high-level of performance on a budget. It is responsive and maneuverable, and offers peace-of-mind when you decide to go off-road.",
+    "color": "Silver",
+    "listPrice": 76949,
+    "standardCost": 4197784
+  }
+]

@@ -25,6 +25,7 @@ namespace BLL.Test
     public class SalesServiceTest
     {
         private IEnumerable<Sales> sales;
+        private IEnumerable<Product> product;
         private Mock<IUnitOfWork> _unitOfWork;
         IConfiguration _configuration = new ConfigurationBuilder()
                                        .AddInMemoryCollection()
@@ -37,6 +38,7 @@ namespace BLL.Test
         public SalesServiceTest(ITestOutputHelper output)
         {
             sales = CommonHelper.LoadDataFromFile<IEnumerable<Sales>>(@"MockData\Sales.json");
+            product = CommonHelper.LoadDataFromFile<IEnumerable<Product>>(@"MockData\Product.json");
             _unitOfWork = MockUnitOfWork();
             _kafkaSender = MockIkafkaSender();
             _redis = MockRedis();
@@ -48,6 +50,7 @@ namespace BLL.Test
         private Mock<IUnitOfWork> MockUnitOfWork()
         {
             var salesQueryable = sales.AsQueryable().BuildMock().Object;
+            var productQueryable = product.AsQueryable().BuildMock().Object;
             var mockUnitOfWork = new Mock<IUnitOfWork>();
 
             mockUnitOfWork
@@ -61,6 +64,10 @@ namespace BLL.Test
             mockUnitOfWork
                .Setup(u => u.SalesRepository.GetSingleAsync(It.IsAny<Expression<Func<Sales, bool>>>()))
                .ReturnsAsync((Expression<Func<Sales, bool>> condition) => salesQueryable.FirstOrDefault(condition));
+
+            mockUnitOfWork
+               .Setup(u => u.ProductRepository.GetSingleAsync(It.IsAny<Expression<Func<Product, bool>>>()))
+               .ReturnsAsync((Expression<Func<Product, bool>> condition) => productQueryable.FirstOrDefault(condition));
 
             mockUnitOfWork
                .Setup(u => u.SalesRepository.AddAsync(It.IsAny<Sales>(), It.IsAny<CancellationToken>()))
@@ -186,7 +193,7 @@ namespace BLL.Test
             //Arrange
             var expected = new Sales()
             {
-                ProductId = Guid.Parse("10827462-769A-6627-120E-04709C00D27A"),
+                ProductId = Guid.Parse("cf3b183c-c994-f88c-006e-0571cbae728d"),
                 CustomerId = Guid.Parse("8D02546F-5839-B1B2-AFE4-002C344F99A9"),
                 TerritoriesId = Guid.Parse("CB181A14-1A4D-5D32-E777-19AE8CAE0666"),
                 OrderQuantity = 1,
@@ -195,40 +202,124 @@ namespace BLL.Test
                 OrderDate = DateTime.Now
             };
 
-            var svc = CreateSalesService();
-
             //Actual
+            var svc = CreateSalesService();
+            
             Func<Task> act = async () => { await svc.CreateSalesAsync(expected); };
+
+            //Assert
             await act.Should().NotThrowAsync<Exception>();
 
-            //assert
-            _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
             _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.Once);
         }
-        //[Theory]
-        //[InlineData("7fa85f64-5717-4562-b3fc-2c963f66afa6")]
-        //public async Task UpdateFakultasAsync_Succees(string salesId)
-        //{
+
+        [Theory]
+        [InlineData(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "10827462-769a-6627-120e-04709c00d27a",
+            "44215735-dbfb-38fc-f12f-0008dd146cee",
+            "cb181a14-1a4d-5d32-e777-19ae8cae0666",
+            2)]
+        public async Task UpdateSalesAsync_Succees(
+            string salesId,
+            string productId,
+            string customerId,
+            string terrtitoriesId,
+            int orderQuantity)
+        {
 
 
-        //    Guid id = Guid.Parse(salesId);
-            
-        //    //Expected
-        //    var expected = new Sales
-        //    {
-        //        SalesId = id,
-        //        CustomerId = namaFakultas,,
-        //        ProductId = ,
+            Guid id = Guid.Parse(salesId);
+            Guid productid = Guid.Parse(productId);
+            Guid customerid = Guid.Parse(customerId);
+            Guid territoriesid = Guid.Parse(terrtitoriesId);
 
-        //    };
+            //Expected
+            var expected = new Sales
+            {
+                SalesId = id,
+                ProductId = productid,
+                CustomerId = customerid,
+                TerritoriesId = territoriesid,
+                OrderQuantity = orderQuantity,
+                OrderDate = DateTime.Now
 
-        //    var svc = CreateFakultasService();
+            };
 
-        //    var oldData = await svc.GetFakultasByIdAsync(id);
+            //Actual
+            var svc = CreateSalesService();
+            Func<Task> act = async () => { await svc.UpdateSalesAsync(expected); };
 
-        //    var newData = await svc.UpdateFakultasAsync(expected);
-        //    oldData.Should().NotBeEquivalentTo(newData);
-        //}
+            //Assert
+            await act.Should().NotThrowAsync<Exception>();
+            _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        }
+
+        [Theory]
+        [InlineData(
+            "6fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "10827462-769a-6627-120e-04709c00d27a",
+            "44215735-dbfb-38fc-f12f-0008dd146cee",
+            "cb181a14-1a4d-5d32-e777-19ae8cae0666",
+            2)]
+        public async Task UpdateSalesAsync_Error_IdNotFound(
+            string salesId,
+            string productId,
+            string customerId,
+            string terrtitoriesId,
+            int orderQuantity)
+        {
+
+
+            Guid id = Guid.Parse(salesId);
+            Guid productid = Guid.Parse(productId);
+            Guid customerid = Guid.Parse(customerId);
+            Guid territoriesid = Guid.Parse(terrtitoriesId);
+
+            //Expected
+            var expected = new Sales
+            {
+                SalesId = id,
+                ProductId = productid,
+                CustomerId = customerid,
+                TerritoriesId = territoriesid,
+                OrderQuantity = orderQuantity,
+                OrderDate = DateTime.Now
+
+            };
+
+            //Actual
+            var svc = CreateSalesService();
+            Func<Task> act = async () => { await svc.UpdateSalesAsync(expected); };
+
+            //Assert
+            await act.Should().ThrowAsync<Exception>().WithMessage($"Sales with id {id} not exist");
+        }
+
+        [Fact]
+        public async Task ApproveRejectSales_Success()
+        {
+            var expected = new VerifyingCustomerDTO()
+            {
+                SalesId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+                CustomerId = Guid.Parse("44215735-dbfb-38fc-f12f-0008dd146cee"),
+                CustomerStatus = CustomerStatus.Active
+            };
+
+            //Actual
+            var svc = CreateSalesService();
+
+            Func<Task> act = async () => { await svc.ApproveRejectSales(expected); };
+
+            //Assert
+            await act.Should().NotThrowAsync<Exception>();
+
+            _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            _redis.Verify(x => x.DeleteAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}"), Times.AtLeastOnce);
+            _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.Once);
+
+        }
         #endregion
     }
 }

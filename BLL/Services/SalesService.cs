@@ -97,7 +97,7 @@ namespace BLL.Services
             await IsSalesStatusVerifying(data.CustomerId);
 
             _logger.LogInformation($"Checking product price");
-            var dataProduct = await _unitOfWork.ProductRepository.GetByIdAsync(data.ProductId);
+            var dataProduct = await _unitOfWork.ProductRepository.GetSingleAsync(x => x.ProductId == data.ProductId);
             
             if (dataProduct == null)
             {
