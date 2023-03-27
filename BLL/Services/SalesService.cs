@@ -153,7 +153,9 @@ namespace BLL.Services
             _logger.LogInformation($"Saving to database, Delete Previous data from redis, Savinf new data to redis");
             await _unitOfWork.SaveAsync();
 
-            
+            await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}");
+            await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
+
         }
 
 
@@ -182,8 +184,6 @@ namespace BLL.Services
                 }
 
                 await UpdateSales(data);
-                await _redis.DeleteAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}");
-                await _redis.SaveAsync($"{PrefixRedisKey.SalesKey}:{data.SalesId}", data, expirition);
             }
         }
 

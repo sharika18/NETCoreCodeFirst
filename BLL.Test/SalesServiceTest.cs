@@ -103,7 +103,13 @@ namespace BLL.Test
 
         private Mock<IRedisService> MockRedis()
         {
-            var mockRedis = new Mock<IRedisService>();
+            var salesQueryable = sales.AsQueryable().BuildMock().Object;
+            var mockRedis = new Mock<IRedisService>(MockBehavior.Strict);
+
+            mockRedis
+                .Setup(x => x.GetAsync<Sales>(It.Is<string>(x => x.Equals($"{PrefixRedisKey.SalesKey}:3fa85f64-5717-4562-b3fc-2c963f66afa6"))))
+                .ReturnsAsync(sales.FirstOrDefault(x => x.SalesId == Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6")))
+                .Verifiable();
 
             mockRedis
                 .Setup(x => x.GetAsync<Sales>(It.Is<string>(x => x.Equals($"{PrefixRedisKey.SalesKey}:4fa85f64-5717-4562-b3fc-2c963f66afa6"))))
@@ -116,7 +122,9 @@ namespace BLL.Test
                 .Verifiable();
 
             mockRedis
-              .Setup(x => x.DeleteAsync(It.IsAny<string>())).Verifiable();
+              .Setup(x => x.DeleteAsync(It.IsAny<string>()))
+              .ReturnsAsync(It.IsAny<bool>())
+              .Verifiable();
 
             return mockRedis;
         }
@@ -169,7 +177,7 @@ namespace BLL.Test
         }
 
         [Theory]
-        [InlineData("4fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        [InlineData("3fa85f64-5717-4562-b3fc-2c963f66afa6")]
         public async Task GetSalesByIdAsync_Redis_Success(string salesId)
         {
             //Expected
@@ -254,6 +262,8 @@ namespace BLL.Test
             //Assert
             await act.Should().NotThrowAsync<Exception>();
             _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            _redis.Verify(x => x.DeleteAsync(It.Is<string>(y => y.Equals($"{PrefixRedisKey.SalesKey}:{expected.SalesId}"))), Times.Once);
+            _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.AtLeastOnce);
         }
 
         [Theory]
@@ -297,14 +307,19 @@ namespace BLL.Test
             await act.Should().ThrowAsync<Exception>().WithMessage($"Sales with id {id} not exist");
         }
 
-        [Fact]
-        public async Task ApproveRejectSales_Success()
+        [Theory]
+        [InlineData(
+            "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "44215735-dbfb-38fc-f12f-0008dd146cee",
+            CustomerStatus.Active
+            )]
+        public async Task ApproveRejectSales_Success(string salesId, string customerId, string customerStatus)
         {
             var expected = new VerifyingCustomerDTO()
             {
-                SalesId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
-                CustomerId = Guid.Parse("44215735-dbfb-38fc-f12f-0008dd146cee"),
-                CustomerStatus = CustomerStatus.Active
+                SalesId = Guid.Parse(salesId),
+                CustomerId = Guid.Parse(customerId),
+                CustomerStatus =customerStatus
             };
 
             //Actual
@@ -316,8 +331,8 @@ namespace BLL.Test
             await act.Should().NotThrowAsync<Exception>();
 
             _unitOfWork.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-            _redis.Verify(x => x.DeleteAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}"), Times.AtLeastOnce);
-            _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.Once);
+            _redis.Verify(x => x.DeleteAsync(It.Is<string>(y => y.Equals($"{PrefixRedisKey.SalesKey}:{expected.SalesId}"))), Times.Once);
+            _redis.Verify(x => x.SaveAsync($"{PrefixRedisKey.SalesKey}:{expected.SalesId}", It.IsAny<Sales>(), It.IsAny<TimeSpan>()), Times.AtLeastOnce);
 
         }
         #endregion

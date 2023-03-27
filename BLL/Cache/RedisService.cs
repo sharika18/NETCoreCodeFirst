@@ -29,7 +29,6 @@ namespace BLL.Cache
 
         private List<IServer> GetRedisServers() => Connection.GetEndPoints().Select(endpoint => Connection.GetServer(endpoint)).ToList();
 
-
         public async Task<bool> DeleteAsync(string key)
         {
             try
