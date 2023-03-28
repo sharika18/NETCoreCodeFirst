@@ -10,4 +10,9 @@ namespace API.DTO
         public string TerritoriesId { get; set; }
         public string Country { get; set; }
     }
+
+    public class TerritoriesCreateDTO
+    {
+        public string Country { get; set; }
+    }
 }

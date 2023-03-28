@@ -4,27 +4,18 @@ using DAL.Repositories;
 using External;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using HotChocolate;
-using System.Threading.Tasks;
-using HotChocolate.AspNetCore;
-using HotChocolate.AspNetCore.Playground;
 using BLL.Services;
 using BLL.Background;
 using BLL.Cache;
 using BLL.Interfaces;
 using DAL.Interfaces;
+using API.Hubs;
 
 namespace API
 {
@@ -48,10 +39,8 @@ namespace API
                 options
                 .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
             );
+
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
-
-
-            
 
             services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -94,13 +83,17 @@ namespace API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                //endpoints.MapGraphQL();
             });
 
+
+
             app.UseSwagger();
-            app.UseSwaggerUI(c => {
+            app.UseSwaggerUI(c =>
+            {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "NET Core Code First");
             });
+
+
         }
     }
 }

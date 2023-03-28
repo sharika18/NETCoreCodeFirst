@@ -18,5 +18,6 @@ namespace BLL.Interfaces
         //Territories
 
         Task<List<Territories>> GetAllTerritoriesAsync();
+        Task CreateTerritoriesAsync(Territories data);
     }
 }

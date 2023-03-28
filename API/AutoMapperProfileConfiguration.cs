@@ -49,6 +49,9 @@ namespace API
             //TERRITORIES
             CreateMap<TerritoriesDTO, Model.Territories>();
             CreateMap<Model.Territories, TerritoriesDTO>();
+
+            CreateMap<TerritoriesCreateDTO, Model.Territories>();
+            CreateMap<Model.Territories, TerritoriesCreateDTO>();
         }
     }
 }

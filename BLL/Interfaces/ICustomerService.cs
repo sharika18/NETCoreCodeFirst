@@ -8,7 +8,7 @@ namespace BLL.Interfaces
 {
     public interface ICustomerService
     {
-        //Task<List<Customer>> GetAllCustomerAsync();
+        Task<List<Customer>> GetAllCustomerAsync();
         //Task CreateCustomerAsync(Customer data);
         Task<Customer> GetCustomerByIdAsync(Guid id);
         //Task UpdateCustomerAsync(Customer data);

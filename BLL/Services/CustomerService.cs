@@ -40,7 +40,11 @@ namespace BLL.Services
             topic = _config.GetValue<string>("Topic:VerifyConsumer");
         }
 
-        
+        public async Task<List<Customer>> GetAllCustomerAsync()
+        {
+            return await _unitOfWork.CustomerRepository.GetAll()
+                .ToListAsync();
+        }
 
         public async Task<Customer> GetCustomerByIdAsync(Guid CustomerId)
         {
@@ -85,11 +89,7 @@ namespace BLL.Services
         }
 
         /*
-        public async Task<List<Customer>> GetAllCustomerAsync()
-        {
-            return await _unitOfWork.CustomerRepository.GetAll()
-                .ToListAsync();
-        }
+        
         public async Task CreateCustomerAsync(Customer data)
         {
             await _unitOfWork.CustomerRepository.AddAsync(data);

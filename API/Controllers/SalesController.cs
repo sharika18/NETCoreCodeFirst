@@ -136,5 +136,29 @@ namespace API.Controllers
             List<TerritoriesDTO> mappedResult = _mapper.Map<List<TerritoriesDTO>>(result);
             return new OkObjectResult(mappedResult);
         }
+
+        /// <summary>
+        /// Create Territories 
+        /// </summary>
+        /// <param name="TerritoriesDTO">Territories data.</param>
+        /// <response code="200">Request ok.</response>
+        /// <response code="400">Request failed because of an exception.</response>
+        [HttpPost]
+        [Route("Territories")]
+        [ProducesResponseType(typeof(TerritoriesDTO), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        public async Task<ActionResult> CreateAsync([FromBody] TerritoriesCreateDTO TerritoriesCreateDTO)
+        {
+            try
+            {
+                Model.Territories data = _mapper.Map<Model.Territories>(TerritoriesCreateDTO);
+                await _salesService.CreateTerritoriesAsync(data);
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
     }
 }

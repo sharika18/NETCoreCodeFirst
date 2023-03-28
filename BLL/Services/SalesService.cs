@@ -199,7 +199,13 @@ namespace BLL.Services
                 .ToListAsync();
         }
 
+        public async Task CreateTerritoriesAsync(Territories data)
+        {
+            await _unitOfWork.TerritoriesRepository.AddAsync(data);
+            await _unitOfWork.SaveAsync();
+        }
+
     }
 
-    
+
 }
