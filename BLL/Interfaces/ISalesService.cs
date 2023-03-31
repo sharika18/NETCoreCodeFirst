@@ -14,6 +14,7 @@ namespace BLL.Interfaces
         Task CreateSalesAsync(Sales data);
         Task UpdateSalesAsync(Sales data);
         Task ApproveRejectSales(VerifyingCustomerDTO verifyingCustomerdata);
+        Task ResendVerifyingSales();
 
         //Territories
 

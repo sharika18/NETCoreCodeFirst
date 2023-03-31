@@ -50,6 +50,7 @@ namespace BLL.Services
                 .Include(a => a.Product)
                 .Include(a => a.Customer)
                 .Include(a => a.Territories)
+                .OrderByDescending(x => x.OrderDate)
                 .ToListAsync();
         }
 
@@ -187,6 +188,18 @@ namespace BLL.Services
             }
         }
 
+        public async Task ResendVerifyingSales()
+        {
+            List<Sales> verifyingData = 
+                await _unitOfWork.SalesRepository.GetAll().ToListAsync();
+
+            foreach (var data in verifyingData)
+            {
+
+                await SendToOrderCreated(data);
+            }
+
+        }
         public async Task SendToOrderCreated(Sales data)
         {
             _logger.LogInformation($"Send data with Sales/Order ID {data.SalesId} to Kafka with Topic : OrderCreated");
@@ -195,7 +208,7 @@ namespace BLL.Services
 
         public async Task<List<Territories>> GetAllTerritoriesAsync()
         {
-            return await _unitOfWork.TerritoriesRepository.GetAll()
+            return await _unitOfWork.TerritoriesRepository.GetAll().OrderBy(x => x.Country)
                 .ToListAsync();
         }
 

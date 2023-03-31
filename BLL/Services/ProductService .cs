@@ -33,7 +33,7 @@ namespace BLL.Services
 
         public async Task<List<Product>> GetAllProductAsync()
         {
-            return await _unitOfWork.ProductRepository.GetAll()
+            return await _unitOfWork.ProductRepository.GetAll().OrderBy(x => x.ProductName)
                 .Include(a => a.SubCategory)
                 .ToListAsync();
         }

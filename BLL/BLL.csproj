@@ -6,8 +6,10 @@
 
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="2.0.2" />
+    <PackageReference Include="Cron" Version="1.0.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.0" />
+    <PackageReference Include="Quartz" Version="3.3.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.96" />
   </ItemGroup>
 

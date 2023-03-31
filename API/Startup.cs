@@ -16,6 +16,8 @@ using BLL.Cache;
 using BLL.Interfaces;
 using DAL.Interfaces;
 using API.Hubs;
+using BLL.Scheduler;
+using BLL;
 
 namespace API
 {
@@ -57,9 +59,15 @@ namespace API
             //services.AddSingleton<IHostedService, ReceiveTopicOrderCreated>();
             services.AddHostedService<ReceiveTopicOrderCreated>();
             services.AddHostedService<ReceiveTopicVerifyCustomer>();
+            //services.AddHostedService<ResendVerfyingSalesScheduler>();
 
 
             services.AddApplicationInsightsTelemetry();
+
+            services.AddTransient<ResendVerfyingSalesScheduler>();
+            services.AddTransient<QuartzJobFactory>();
+
+            services.AddSingleton<ISchedulerService, SchedulerService>();
 
             services.AddSwaggerGen(c =>
             {
@@ -92,6 +100,11 @@ namespace API
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "NET Core Code First");
             });
+
+            //ini buat inisialisasi shedulernya dan trigger start nya
+            var schedulerService = app.ApplicationServices.GetRequiredService<ISchedulerService>();
+            schedulerService.Initialize();
+            schedulerService.Start();
 
 
         }

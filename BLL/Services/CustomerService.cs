@@ -42,7 +42,7 @@ namespace BLL.Services
 
         public async Task<List<Customer>> GetAllCustomerAsync()
         {
-            return await _unitOfWork.CustomerRepository.GetAll()
+            return await _unitOfWork.CustomerRepository.GetAll().OrderBy(x => x.FirstName)
                 .ToListAsync();
         }
 
